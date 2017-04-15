@@ -1,0 +1,175 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="./rehnen-tag.html">
+
+<!--
+`rehnen-input-tag`
+Tags in what looks like an input tag
+
+@demo demo/index.html
+-->
+
+<dom-module id="rehnen-tag-input">
+    <template>
+        <style>
+            /**
+            we should never specify color on here, that should be for the user to decide
+             */
+            :host {
+                display: block;
+                border: 1px solid black;
+                padding: 2px;
+                height: 30px;
+
+            }
+            input {
+                border: none;
+                outline: none;
+                max-width: 100%;
+                /*
+                because the programmer or designer that will be using this in the future
+                should be able to think of this as a potato
+                 */
+                background: transparent;
+                color: inherit;
+            }
+            ::slotted(rehnen-tag) {
+
+            }
+        </style>
+        <div id="container">
+            <slot></slot>
+        </div>
+    </template>
+
+    <script>
+        class RehnenInputTag extends Polymer.Element {
+            //Apologies for introducing this state in my element
+            //
+
+            static get is() { return 'rehnen-tag-input'; }
+            static get properties() {
+                return {
+                    value: {
+                        type: String,
+                        observer: '_valueChange'
+                    }
+                };
+            }
+            connectedCallback() {
+                this.okToDelete = false;
+                super.connectedCallback();
+                let input = document.createElement("input");
+                input.size = 1;
+                this.$.container.appendChild(input);
+                this.addEventListener("click", e => {
+                    input.style.display = "inline-block";
+                    input.focus();
+                });
+
+                input.addEventListener("keydown", e => {
+                    //This event handler is only here to manage state
+                    console.log(e);
+                    console.log(input.value.length);
+                    if(e.key === "Backspace" && input.value.length === 0) {
+                        this.okToDelete = true;
+                    } else {
+                        this.okToDelete = false;
+                    }
+                    console.log(this.okToDelete);
+                });
+                input.addEventListener("keyup", e => {
+                    console.log(123);
+                    if(e.key === "ArrowLeft" && (input.value.length === 0 || e.ctrlKey)) {
+                        this.moveLeft(input);
+                        //JUST for firefox, klåparkod
+                        setTimeout(()=> {
+                            input.focus();
+                        });
+                    } else if(e.key === "ArrowRight" && (input.value.length === 0 || e.ctrlKey)) {
+                        this.moveRight(input);
+                        //JUST for firefox
+                        setTimeout(()=> {
+                            input.focus();
+                        });
+                    }
+                    else if(e.key === "Backspace") {
+                        console.log(input.previousElementSibling);
+                        console.log((input.value.length === 0 && input.previousElementSibling && this.okToDelete === true), 1010);
+                        if(input.value.length === 0 && input.previousElementSibling && this.okToDelete === true) {
+                            this.$.container.removeChild(input.previousElementSibling);
+                            this.dispatchEvent(new CustomEvent("value-change", {value: this.getValue()}));
+                        }
+                    }
+                    else if(e.key === "Enter") {
+                        if(input.value.length > 0 && !this.hasValue(input.value.trim())) {
+                            const tag = document.createElement("rehnen-tag");
+                            tag.value = input.value.trim();
+                            this.$.container.insertBefore(tag, input);
+                            input.value = "";
+                            input.size = 1;
+                            input.focus();
+                            this.dispatchEvent(new CustomEvent("value-change", {value: this.getValue()}));
+                            this.value = this.toString();
+                        }
+                    }
+                });
+
+                input.addEventListener("input", e => {
+                    input.size = input.value.length +1;
+                    this.dispatchEvent(new CustomEvent("input", e));
+                });
+
+            }
+            hasValue(value) {
+                return this.getValue().find(p => p === value) !== undefined;
+            }
+            ready() {
+                super.ready();
+            }
+
+            getValue() {
+
+                //HTMLElement array
+                return Array.from(this.$.container.querySelectorAll("rehnen-tag"))
+                    .map(tag => tag.getValue());
+            }
+            toString() {
+                return this.getValue().join();
+            }
+
+            moveLeft(element) {
+                this.$.container.insertBefore(element, element.previousElementSibling);
+            }
+
+            moveRight(element) {
+                this.insertAfter(element, element.nextElementSibling);
+            }
+
+            focus() {
+                this.querySelector("input").focus();
+                this.querySelector("input").style.display = "inline-block";
+            }
+
+            /**
+             * @description this is the counterpart to insertBefore that should have been added tp Element
+             * @param node
+             * @param sibling
+             */
+            insertAfter(node, sibling) {
+                //in case of next-sibling = null, it will be inserted last
+                //no need to check the special case
+                let nextSibling = sibling;
+                if(sibling) {
+                    nextSibling = sibling.nextSibling;
+                }
+                this.$.container.insertBefore(node, nextSibling);
+            }
+
+            _valueChange(newValue, oldValue) {
+                console.log(newValue, oldValue);
+            }
+        }
+
+        window.customElements.define(RehnenInputTag.is, RehnenInputTag);
+    </script>
+</dom-module>

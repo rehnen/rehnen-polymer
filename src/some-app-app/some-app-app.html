@@ -1,0 +1,43 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="elements/input/rehnen-tag-input.html" >
+<dom-module id="some-app-app">
+  <template>
+    <style>
+      :host {
+        display: block;
+        font-family: Arial;
+      }
+      rehnen-tag-input {
+        background-color: #0a3142;
+        color: white;
+      }
+      rehnen-tag {
+        background-color: #7baaf7;
+      }
+
+    </style>
+    <h2>Hello [[prop1]]</h2>
+    <rehnen-tag-input id="tags" value="tag1,tag2,tag3,tag3" />
+  </template>
+
+  <script>
+    class MyApplication extends Polymer.Element {
+      static get is() { return 'some-app-app'; }
+      static get properties() {
+        return {
+          prop1: {
+            type: String,
+            value: 'some-app-app'
+          }
+        };
+      }
+    }
+
+    window.customElements.define(MyApplication.is, MyApplication);
+
+
+
+
+
+  </script>
+</dom-module>

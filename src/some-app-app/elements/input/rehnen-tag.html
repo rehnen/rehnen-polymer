@@ -1,0 +1,89 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+`rehnen-input-tag`
+Tags in what looks like an input tag
+
+@demo demo/index.html
+-->
+
+<dom-module id="rehnen-tag">
+    <template>
+        <style>
+            :host {
+                display: inline-flex;
+                border-radius: 4px;
+                padding: 2px;
+                margin: 2px;
+                background-color: #00bfa5;
+                color: #0a3142;
+
+            }
+            #closeIcon {
+                color: #0a3142;
+                padding: 0 4px 0 4px;
+                margin-left: 2px;
+                margin-right: 2px;
+                cursor: pointer;
+            }
+            p {
+                font-family: inherit;
+                padding: 0;
+                margin: 0;
+            }
+            rehnen-tag {
+                background-color: rebeccapurple;
+            }
+
+        </style>
+
+        <p>
+            {{value}}
+        </p>
+        <p id="closeIcon" name>&#10006;</p>
+        <!--this is where the magic happens-->
+    </template>
+
+    <script>
+        class RehnenTag extends Polymer.Element {
+            static get is() {
+                return 'rehnen-tag'; }
+            static get properties() {
+                return {
+                    prop1: {
+                        type: String,
+                        value: 'rehnen-tag'
+                    },
+                    value: {
+                        type: String,
+                        observer: '_valueChange'
+                    }
+                };
+            }
+            getValue() {
+                return this.value;
+            }
+            //called when attached to the dom
+            connectedCallback() {
+                super.connectedCallback();
+                this.$.closeIcon.addEventListener("click", this.remove.bind(this));
+            }
+            disconnectedCallback() {
+                super.disconnectedCallback();
+                this.$.closeIcon.removeEventListener("click", this.remove.bind(this))
+            }
+
+
+            //ready is called before  connectedCallback
+            ready() {
+                super.ready();
+            }
+            
+            _valueChange(newValue, oldValue) {
+                console.log(newValue, oldValue);
+            }
+        }
+
+        window.customElements.define(RehnenTag.is, RehnenTag);
+    </script>
+</dom-module>
