@@ -37,7 +37,6 @@ Tags in what looks like an input tag
             }
         </style>
         <div id="container">
-            <slot></slot>
         </div>
     </template>
 
@@ -55,78 +54,76 @@ Tags in what looks like an input tag
                     }
                 };
             }
+            /**
+             *  @method connectedCallback
+             */
             connectedCallback() {
                 this.okToDelete = false;
                 super.connectedCallback();
-                let input = document.createElement("input");
-                input.size = 1;
-                this.$.container.appendChild(input);
+                this.input = document.createElement("input");
+                this.input.size = 1;
+                this.$.container.appendChild(this.input);
                 this.addEventListener("click", e => {
-                    input.style.display = "inline-block";
-                    input.focus();
+                    this.input.style.display = "inline-block";
+                    this.input.focus();
                 });
 
-                input.addEventListener("keydown", e => {
+                this.input.addEventListener("keydown", e => {
                     //This event handler is only here to manage state
-                    console.log(e);
-                    console.log(input.value.length);
-                    if(e.key === "Backspace" && input.value.length === 0) {
+                    if(e.key === "Backspace" && this.input.value.length === 0) {
                         this.okToDelete = true;
                     } else {
                         this.okToDelete = false;
                     }
-                    console.log(this.okToDelete);
                 });
-                input.addEventListener("keyup", e => {
-                    console.log(123);
-                    if(e.key === "ArrowLeft" && (input.value.length === 0 || e.ctrlKey)) {
-                        this.moveLeft(input);
+                this.input.addEventListener("keyup", e => {
+                    if(e.key === "ArrowLeft" && (this.input.value.length === 0 || e.ctrlKey)) {
+                        this.moveLeft(this.input);
                         //JUST for firefox, klåparkod
                         setTimeout(()=> {
-                            input.focus();
+                            this.input.focus();
                         });
-                    } else if(e.key === "ArrowRight" && (input.value.length === 0 || e.ctrlKey)) {
-                        this.moveRight(input);
+                    } else if(e.key === "ArrowRight" && (this.input.value.length === 0 || e.ctrlKey)) {
+                        this.moveRight(this.input);
                         //JUST for firefox
                         setTimeout(()=> {
-                            input.focus();
+                            this.input.focus();
                         });
                     }
                     else if(e.key === "Backspace") {
-                        console.log(input.previousElementSibling);
-                        console.log((input.value.length === 0 && input.previousElementSibling && this.okToDelete === true), 1010);
-                        if(input.value.length === 0 && input.previousElementSibling && this.okToDelete === true) {
-                            this.$.container.removeChild(input.previousElementSibling);
+                        if(this.input.value.length === 0 && this.input.previousElementSibling && this.okToDelete === true) {
+                            this.$.container.removeChild(this.input.previousElementSibling);
                             this.dispatchEvent(new CustomEvent("value-change", {value: this.getValue()}));
                         }
                     }
                     else if(e.key === "Enter") {
-                        if(input.value.length > 0 && !this.hasValue(input.value.trim())) {
-                            const tag = document.createElement("rehnen-tag");
-                            tag.value = input.value.trim();
-                            this.$.container.insertBefore(tag, input);
-                            input.value = "";
-                            input.size = 1;
-                            input.focus();
-                            this.dispatchEvent(new CustomEvent("value-change", {value: this.getValue()}));
-                            this.value = this.toString();
+                        if(this.input.value.length > 0 && !this.hasValue(this.input.value.trim())) {
+                            //this makes me sad, but I think i need it, given the attribute listeners, hate instance variables
+                            this.inputIndex = this.getElementIndex(this.input);
+                            let values = this.getValue(this.inputIndex);
+                            values.splice(this.inputIndex, 0, this.input.value.trim());//ugly method that mutates the array
+                            this.setAttribute("value", values.join()); //To make sure that the html reprecents the value
                         }
                     }
                 });
 
-                input.addEventListener("input", e => {
-                    input.size = input.value.length +1;
+                this.input.addEventListener("input", e => {
+                    this.input.size = this.input.value.length +1;
                     this.dispatchEvent(new CustomEvent("input", e));
                 });
 
             }
+
+            /**
+             * @returns Number
+             */
+
+            getElementIndex(element) {
+                return Array.from(this.$.container.children).indexOf(element);
+            }
             hasValue(value) {
                 return this.getValue().find(p => p === value) !== undefined;
             }
-            ready() {
-                super.ready();
-            }
-
             getValue() {
 
                 //HTMLElement array
@@ -165,8 +162,27 @@ Tags in what looks like an input tag
                 this.$.container.insertBefore(node, nextSibling);
             }
 
-            _valueChange(newValue, oldValue) {
-                console.log(newValue, oldValue);
+            _valueChange(newValue) {
+                const valueArr = newValue.split(",");
+                const uniques = valueArr.filter((val, i) => valueArr.indexOf(val) === i);
+                if(valueArr.length > uniques.length) {
+                    this.setAttribute("value", uniques.join());
+                    return;
+                }
+                //Clear and insert new elements
+                this.$.container.innerHTML = "";
+                uniques.forEach(val => {
+                    let element = document.createElement("rehnen-tag");
+                    element.setAttribute("value", val);
+                    this.$.container.appendChild(element);
+                });
+                if(this.input) {
+                    let element = this.$.container.children[this.inputIndex +1];
+                    this.$.container.insertBefore(this.input, element);
+                    this.input.value = "";
+                    this.input.focus();
+
+                }
             }
         }
 

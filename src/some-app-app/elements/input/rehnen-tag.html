@@ -17,6 +17,7 @@ Tags in what looks like an input tag
                 margin: 2px;
                 background-color: #00bfa5;
                 color: #0a3142;
+                @apply --inner-widget-theme;
 
             }
             #closeIcon {
@@ -30,9 +31,6 @@ Tags in what looks like an input tag
                 font-family: inherit;
                 padding: 0;
                 margin: 0;
-            }
-            rehnen-tag {
-                background-color: rebeccapurple;
             }
 
         </style>
@@ -79,8 +77,8 @@ Tags in what looks like an input tag
                 super.ready();
             }
             
-            _valueChange(newValue, oldValue) {
-                console.log(newValue, oldValue);
+            _valueChange(newValue) {
+                this.setAttribute("value", newValue);
             }
         }
 
